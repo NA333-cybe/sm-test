@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S/M 属性测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 40%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 40px 36px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+            letter-spacing: 2px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d);
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+        .question-card {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .question-card.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .q-num {
+            font-size: 0.8rem;
+            color: #ff6b6b;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+        .q-text {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            color: #f0f0f0;
+        }
+        .options { display: flex; flex-direction: column; gap: 10px; }
+        .option {
+            padding: 14px 18px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-size: 0.95rem;
+            color: #ccc;
+            background: rgba(255,255,255,0.02);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .option:hover {
+            border-color: rgba(255,107,107,0.5);
+            background: rgba(255,107,107,0.08);
+            color: #fff;
+        }
+        .option.selected {
+            border-color: #ff6b6b;
+            background: rgba(255,107,107,0.15);
+            color: #fff;
+        }
+        .option .dot {
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+        }
+        .option.selected .dot {
+            border-color: #ff6b6b;
+            background: #ff6b6b;
+            box-shadow: 0 0 10px rgba(255,107,107,0.5);
+        }
+        .btn-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 28px;
+            gap: 12px;
+        }
+        .btn {
+            padding: 12px 28px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.25s ease;
+        }
+        .btn-prev {
+            background: rgba(255,255,255,0.06);
+            color: #aaa;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .btn-prev:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        .btn-next {
+            background: linear-gradient(135deg, #ff6b6b, #e55a5a);
+            color: #fff;
+            font-weight: 600;
+        }
+        .btn-next:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-submit {
+            background: linear-gradient(135deg, #ffd93d, #f0c000);
+            color: #1a1a2e;
+            font-weight: 700;
+        }
+        .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+        .result-card {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.6s ease;
+        }
+        .result-card.show { display: block; }
+        .result-score {
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin: 16px 0;
+        }
+        .result-label {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .result-desc {
+            color: #aaa;
+            line-height: 1.8;
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+        }
+        .result-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0 28px;
+        }
+        .result-bar-label { font-size: 0.85rem; width: 24px; }
+        .result-bar {
+            flex: 1; height: 8px; background: rgba(255,255,255,0.1);
+            border-radius: 4px; overflow: hidden;
+        }
+        .result-bar-fill {
+            height: 100%; border-radius: 4px;
+            transition: width 1s ease;
+        }
+        .btn-retry {
+            background: rgba(255,255,255,0.08);
+            color: #ccc;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+            transition: all 0.25s ease;
+        }
+        .btn-retry:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .email-section { margin: 24px 0 8px; }
+        .email-input {
+            width: 100%; max-width: 320px;
+            padding: 12px 16px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0; font-size: 0.95rem;
+            outline: none; text-align: center;
+            transition: border-color 0.25s;
+        }
+        .email-input:focus { border-color: #ffd93d; }
+        .email-input::placeholder { color: #666; }
+        .btn-send {
+            padding: 10px 24px; border-radius: 8px; border: none;
+            font-size: 0.9rem; cursor: pointer; letter-spacing: 1px;
+            background: linear-gradient(135deg, #ffd93d, #f0c000);
+            color: #1a1a2e; font-weight: 700;
+            transition: all 0.25s ease;
+        }
+        .btn-send:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-copy {
+            padding: 10px 24px; border-radius: 8px;
+            font-size: 0.9rem; cursor: pointer; letter-spacing: 1px;
+            background: rgba(255,255,255,0.08);
+            color: #ccc; border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.25s ease;
+        }
+        .btn-copy:hover { background: rgba(255,255,255,0.15); color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>S / M 属性测试</h1>
+        <p class="subtitle">Dominance · Submission · Personality</p>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+        <!-- 题目区域 -->
+        <div id="questionArea"></div>
+
+        <!-- 按钮区域 -->
+        <div class="btn-row" id="btnRow">
+            <button class="btn btn-prev" id="btnPrev" onclick="prevQuestion()">上一题</button>
+            <button class="btn btn-next" id="btnNext" onclick="nextQuestion()">下一题</button>
+            <button class="btn btn-submit" id="btnSubmit" onclick="submitTest()" style="display:none;">查看结果</button>
+        </div>
+
+        <!-- 结果区域 -->
+        <div class="result-card" id="resultCard"></div>
+    </div>
+
+    <script>
+        const questions = [
+            // ===== 原12题 =====
+            { text: "在团队项目中，你更倾向于：", options: [
+                { text: "主动分配任务、把控整体进度", score: 2 },
+                { text: "先看看别人怎么安排，自己配合执行", score: -2 },
+                { text: "既参与规划也愿意执行，看情况", score: 0 }
+            ]},
+            { text: "朋友聚会决定去哪吃饭时，你通常：", options: [
+                { text: "直接提议并说服大家去某个地方", score: 2 },
+                { text: "等别人提议，去哪里都行", score: -2 },
+                { text: "提出几个选项让大家一起选", score: 0 }
+            ]},
+            { text: "面对冲突或争执，你的第一反应是：", options: [
+                { text: "正面回应，坚持自己的立场", score: 2 },
+                { text: "回避冲突，尽量维持和谐", score: -2 },
+                { text: "理性分析双方观点，寻求折中", score: 0 }
+            ]},
+            { text: "在亲密关系中，你更喜欢：", options: [
+                { text: "主导节奏、制定计划、掌握主动权", score: 2 },
+                { text: "被照顾、被安排，享受对方的主导", score: -2 },
+                { text: "互相主导，动态平衡", score: 0 }
+            ]},
+            { text: "当你有一个新想法时：", options: [
+                { text: "立刻行动，推动身边的人一起做", score: 2 },
+                { text: "先观望，等别人先尝试", score: -2 },
+                { text: "自己先小范围试试，再决定是否推广", score: 0 }
+            ]},
+            { text: "别人评价你时，更常说你是：", options: [
+                { text: "强势、果断、有主见", score: 2 },
+                { text: "温柔、顺从、好相处", score: -2 },
+                { text: "分情况，该强时强该柔时柔", score: 0 }
+            ]},
+            { text: "在规则和秩序面前，你倾向于：", options: [
+                { text: "制定规则，让别人来遵守", score: 2 },
+                { text: "遵守已有的规则，不喜欢打破常规", score: -2 },
+                { text: "遵守但不盲从，必要时提出改进", score: 0 }
+            ]},
+            { text: "做重大决定时：", options: [
+                { text: "自己快速判断，不太需要他人意见", score: 2 },
+                { text: "希望有人帮我分析，给我明确建议", score: -2 },
+                { text: "听取多方意见后自己拍板", score: 0 }
+            ]},
+            { text: "在社交场合中：", options: [
+                { text: "我喜欢成为焦点，带动气氛", score: 2 },
+                { text: "我更愿意待在舒适圈，听别人聊", score: -2 },
+                { text: "看场合和心情，不一定", score: 0 }
+            ]},
+            { text: "如果有人试图控制或指挥你：", options: [
+                { text: "本能抵触，我会反过来掌控局面", score: 2 },
+                { text: "如果对方说得有道理，我愿意接受", score: -2 },
+                { text: "保持警觉，有选择地接受或拒绝", score: 0 }
+            ]},
+            { text: "你更喜欢哪种娱乐方式：", options: [
+                { text: "竞技对抗、策略博弈类（如MOBA、棋牌）", score: 2 },
+                { text: "沉浸体验、跟随剧情类（如RPG、追剧）", score: -2 },
+                { text: "两者都行，看心情切换", score: 0 }
+            ]},
+            { text: "关于人生方向，你更认同：", options: [
+                { text: "我要掌控自己的命运，自己说了算", score: 2 },
+                { text: "顺其自然，命运自有安排", score: -2 },
+                { text: "努力争取，但也接受不可控的部分", score: 0 }
+            ]},
+            // ===== 新增18题 =====
+            { text: "旅行时，你更喜欢：", options: [
+                { text: "自己制定完整行程，按计划推进", score: 2 },
+                { text: "跟团或被安排，不用操心最好", score: -2 },
+                { text: "定大方向，细节随缘调整", score: 0 }
+            ]},
+            { text: "同事/同学遇到难题来请教你：", options: [
+                { text: "直接告诉他该怎么做，干脆利落", score: 2 },
+                { text: "耐心倾听，顺着他的思路给建议", score: -2 },
+                { text: "先问清情况，再一起商量方案", score: 0 }
+            ]},
+            { text: "在游戏开黑时，你通常是：", options: [
+                { text: "指挥位，喊战术、调度队友", score: 2 },
+                { text: "跟着大哥走，听指挥干就完了", score: -2 },
+                { text: "看情况，有时候指挥有时候听安排", score: 0 }
+            ]},
+            { text: "消费购物时，你更偏向：", options: [
+                { text: "目标明确，直奔主题快速拿下", score: 2 },
+                { text: "喜欢听导购推荐，容易被安利", score: -2 },
+                { text: "自己先做功课，再参考他人意见", score: 0 }
+            ]},
+            { text: "在小组讨论中，如果大家的意见分散：", options: [
+                { text: "我会站出来统一方向，推动决策", score: 2 },
+                { text: "我倾向于等待别人来收束讨论", score: -2 },
+                { text: "我会帮助梳理分歧，但不强推结论", score: 0 }
+            ]},
+            { text: "面对突如其来的变故（如航班取消）：", options: [
+                { text: "立刻找解决方案，不浪费时间焦虑", score: 2 },
+                { text: "先有点慌，然后等别人或官方给方案", score: -2 },
+                { text: "先稳住情绪，再理性评估选项", score: 0 }
+            ]},
+            { text: "表达负面情绪时，你通常：", options: [
+                { text: "直接说出来，不喜欢藏着掖着", score: 2 },
+                { text: "尽量忍着，怕影响关系或气氛", score: -2 },
+                { text: "选择性表达，重要的事会说", score: 0 }
+            ]},
+            { text: "朋友向你借一笔不算小的钱：", options: [
+                { text: "直接问清楚用途和还款计划", score: 2 },
+                { text: "不好意思多问，能帮就帮了", score: -2 },
+                { text: "根据对方为人和自己的情况综合判断", score: 0 }
+            ]},
+            { text: "在学习新技能时：", options: [
+                { text: "喜欢自己摸索、试错，不依赖教程", score: 2 },
+                { text: "喜欢有老师带、有系统课程跟着学", score: -2 },
+                { text: "先跟教程入门，后面自己拓展", score: 0 }
+            ]},
+            { text: "家里装修或大扫除时：", options: [
+                { text: "我来安排分工和流程，大家照做", score: 2 },
+                { text: "别人叫我干啥我就干啥，不主动张罗", score: -2 },
+                { text: "和家里人一起商量着来", score: 0 }
+            ]},
+            { text: "被人在公开场合质疑或批评时：", options: [
+                { text: "当场反驳，不让自己吃哑巴亏", score: 2 },
+                { text: "先忍着，事后可能自己消化或不再提", score: -2 },
+                { text: "视对方态度和场合决定是否回应", score: 0 }
+            ]},
+            { text: "和伴侣/好友一起选电影看：", options: [
+                { text: "我一般直接选好，告诉对方看这个", score: 2 },
+                { text: "让对方选，我看什么都行", score: -2 },
+                { text: "我们各提几个然后商量着定", score: 0 }
+            ]},
+            { text: "在健身房或运动时：", options: [
+                { text: "喜欢自己设定目标和计划，独自执行", score: 2 },
+                { text: "喜欢跟着教练或团课，有人带着练", score: -2 },
+                { text: "有时候自己练，有时候跟课", score: 0 }
+            ]},
+            { text: "当你发现某个流程或规矩明显不合理：", options: [
+                { text: "直接找负责人提出质疑，推动改变", score: 2 },
+                { text: "虽然不满但一般选择适应，不想惹麻烦", score: -2 },
+                { text: "先私下了解原因，再决定是否提出", score: 0 }
+            ]},
+            { text: "在饭局或酒桌上：", options: [
+                { text: "我常常是主动敬酒、活跃气氛的人", score: 2 },
+                { text: "我更习惯被动回应，不太主动发起", score: -2 },
+                { text: "看在场的人和氛围再决定参与度", score: 0 }
+            ]},
+            { text: "对于「领导力」这个词，你的态度是：", options: [
+                { text: "我认为自己有领导潜力，也愿意承担", score: 2 },
+                { text: "我对领导别人没兴趣，做好自己就行", score: -2 },
+                { text: "不排斥也不主动追求，顺其自然", score: 0 }
+            ]},
+            { text: "别人向你倾诉烦恼时：", options: [
+                { text: "我会直接给解决方案，帮他分析对策", score: 2 },
+                { text: "我主要倾听和安慰，不急着给建议", score: -2 },
+                { text: "先倾听，看他需要的是安慰还是建议", score: 0 }
+            ]},
+            { text: "如果明天就是世界末日，你会：", options: [
+                { text: "列出To-do清单，把想做的事一件件完成", score: 2 },
+                { text: "和最爱的人待在一起，什么都不想管了", score: -2 },
+                { text: "做一些疯狂的事，也留时间陪伴重要的人", score: 0 }
+            ]}
+        ];
+
+        let currentQ = 0;
+        let answers = new Array(questions.length).fill(null);
+        const totalQ = questions.length;
+
+        function renderAll() {
+            const area = document.getElementById('questionArea');
+            area.innerHTML = '';
+            questions.forEach((q, i) => {
+                const card = document.createElement('div');
+                card.className = 'question-card' + (i === currentQ ? ' active' : '');
+                card.innerHTML = `
+                    <div class="q-num">QUESTION ${i + 1} / ${totalQ}</div>
+                    <div class="q-text">${q.text}</div>
+                    <div class="options">
+                        ${q.options.map((opt, oi) => `
+                            <div class="option${answers[i] === oi ? ' selected' : ''}" onclick="selectOption(${i}, ${oi})">
+                                <div class="dot"></div>
+                                ${opt.text}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                area.appendChild(card);
+            });
+            updateProgress();
+            updateButtons();
+        }
+
+        function selectOption(qIdx, oIdx) {
+            answers[qIdx] = oIdx;
+            renderAll();
+            // 自动跳下一题
+            if (qIdx < totalQ - 1 && answers[qIdx + 1] === null) {
+                setTimeout(() => { currentQ = qIdx + 1; renderAll(); }, 200);
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQ < totalQ - 1) { currentQ++; renderAll(); }
+        }
+
+        function prevQuestion() {
+            if (currentQ > 0) { currentQ--; renderAll(); }
+        }
+
+        function updateProgress() {
+            const answered = answers.filter(a => a !== null).length;
+            document.getElementById('progressFill').style.width = (answered / totalQ * 100) + '%';
+        }
+
+        function updateButtons() {
+            const btnPrev = document.getElementById('btnPrev');
+            const btnNext = document.getElementById('btnNext');
+            const btnSubmit = document.getElementById('btnSubmit');
+            btnPrev.style.display = currentQ === 0 ? 'none' : '';
+            if (currentQ === totalQ - 1) {
+                btnNext.style.display = 'none';
+                btnSubmit.style.display = '';
+            } else {
+                btnNext.style.display = '';
+                btnSubmit.style.display = 'none';
+            }
+        }
+
+        function submitTest() {
+            const allAnswered = answers.every(a => a !== null);
+            if (!allAnswered) {
+                alert('请完成所有题目后再查看结果');
+                return;
+            }
+            let totalScore = 0;
+            answers.forEach((oi, qi) => {
+                totalScore += questions[qi].options[oi].score;
+            });
+
+            // 分数范围 -60 ~ +60
+            const smScore = Math.round((totalScore + 60) / 120 * 100);
+            const sPercent = smScore;
+            const mPercent = 100 - smScore;
+
+            let label, desc, color;
+            if (smScore >= 75) {
+                label = '强 S 型 (Dominant)';
+                desc = '你天生具备领导气质，喜欢掌控局面、主导节奏。在人群中你往往是那个拍板的人，目标感强、行动力出众。亲密关系中你更享受主动权，但也需注意适当倾听他人的声音。';
+                color = '#ff6b6b';
+            } else if (smScore >= 58) {
+                label = '偏 S 型';
+                desc = '你整体偏主动和主导，但不像极端S那样咄咄逼人。你懂得在合适的时候掌控，也保留了一定的灵活性。大多数情况下你愿意带头，但不排斥偶尔的配合。';
+                color = '#ff9a6b';
+            } else if (smScore >= 42) {
+                label = '均衡型 (Switch)';
+                desc = '你是典型的"可攻可守"型人格。在不同的场景和关系中能灵活切换主导与配合的角色。你既有自己的想法和主见，也懂得欣赏和跟随他人，是人缘很好的类型。';
+                color = '#ffd93d';
+            } else if (smScore >= 25) {
+                label = '偏 M 型';
+                desc = '你整体偏配合与顺从，但不代表你没有想法。你更喜欢和谐的氛围，愿意在团队中做好支持者的角色。在亲密关系中，你享受被照顾和被安排的安全感。';
+                color = '#6bcbff';
+            } else {
+                label = '强 M 型 (Submissive)';
+                desc = '你天性温和、善解人意，是团队中最好的协作者。你乐于跟随、享受被引导，在亲密关系中更倾向于交出主动权。你并非软弱，而是以柔克刚——你的配合和包容本身就是一种魅力。';
+                color = '#4da6ff';
+            }
+
+            // 存储结果供邮件/复制使用
+            window._result = { sPercent, mPercent, label, desc, color, answers, questions };
+
+            document.getElementById('questionArea').style.display = 'none';
+            document.getElementById('btnRow').style.display = 'none';
+            document.querySelector('.progress-bar').style.display = 'none';
+
+            const resultCard = document.getElementById('resultCard');
+            resultCard.className = 'result-card show';
+            resultCard.innerHTML = `
+                <div class="result-score" style="color:${color}">${sPercent}%</div>
+                <div class="result-label" style="color:${color}">${label}</div>
+                <div class="result-desc">${desc}</div>
+                <div style="display:flex;gap:30px;justify-content:center;margin:16px 0;">
+                    <div style="text-align:center">
+                        <div style="font-size:2rem;font-weight:700;color:#ff6b6b;">S</div>
+                        <div style="font-size:0.8rem;color:#888;">支配倾向</div>
+                        <div style="font-size:1.2rem;font-weight:600;margin-top:4px;">${sPercent}%</div>
+                    </div>
+                    <div style="text-align:center">
+                        <div style="font-size:2rem;font-weight:700;color:#4da6ff;">M</div>
+                        <div style="font-size:0.8rem;color:#888;">服从倾向</div>
+                        <div style="font-size:1.2rem;font-weight:600;margin-top:4px;">${mPercent}%</div>
+                    </div>
+                </div>
+                <div class="result-bar-wrap">
+                    <span class="result-bar-label" style="color:#ff6b6b;">S</span>
+                    <div class="result-bar">
+                        <div class="result-bar-fill" style="width:${sPercent}%;background:linear-gradient(90deg,#ff6b6b,#ffd93d);"></div>
+                    </div>
+                    <span class="result-bar-label" style="color:#4da6ff;">M</span>
+                </div>
+                <div class="email-section">
+                    <input type="email" id="emailInput" class="email-input" placeholder="输入接收结果的邮箱地址">
+                    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:12px;">
+                        <button class="btn-send" onclick="sendEmail()">发送到邮箱</button>
+                        <button class="btn-copy" onclick="copyResult()">复制结果</button>
+                    </div>
+                    <div id="emailMsg" style="margin-top:8px;font-size:0.85rem;min-height:20px;"></div>
+                </div>
+                <button class="btn-retry" onclick="retryTest()">重新测试</button>
+            `;
+
+            // 自动保存到数据库 + 发送邮件
+            autoSave();
+        }
+
+        function retryTest() {
+            answers = new Array(totalQ).fill(null);
+            currentQ = 0;
+            document.getElementById('questionArea').style.display = '';
+            document.getElementById('btnRow').style.display = 'flex';
+            document.querySelector('.progress-bar').style.display = '';
+            document.getElementById('resultCard').className = 'result-card';
+            renderAll();
+        }
+
+        function buildResultText() {
+            const r = window._result;
+            if (!r) return '';
+            let text = '===== S/M 属性测试结果 =====\n\n';
+            text += `S（支配倾向）：${r.sPercent}%\n`;
+            text += `M（服从倾向）：${r.mPercent}%\n`;
+            text += `类型：${r.label}\n`;
+            text += `解读：${r.desc}\n\n`;
+            text += '----- 答题详情 -----\n';
+            r.answers.forEach((oi, i) => {
+                const q = r.questions[i];
+                const chosen = oi !== null ? q.options[oi].text : '未作答';
+                text += `${i + 1}. ${q.text}\n   答：${chosen}\n`;
+            });
+            text += '\n—— 由 S/M 属性测试生成';
+            return text;
+        }
+
+        function sendEmail() {
+            const email = document.getElementById('emailInput').value.trim();
+            const msgEl = document.getElementById('emailMsg');
+            if (!email) { msgEl.style.color = '#ff6b6b'; msgEl.textContent = '请先输入邮箱地址'; return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msgEl.style.color = '#ff6b6b'; msgEl.textContent = '邮箱格式不正确'; return; }
+            postToServer('/api/send-email', { to: email, subject: 'S/M 属性测试结果', body: buildResultText() }, msgEl);
+        }
+
+        async function autoSave() {
+            const msgEl = document.getElementById('emailMsg');
+            const r = window._result;
+            if (!r) return;
+
+            // 获取公网 IP
+            let publicIP = '';
+            try {
+                const resp = await fetch('https://api.ipify.org?format=json');
+                const ipData = await resp.json();
+                publicIP = ipData.ip;
+            } catch (e) { /* 无法获取公网IP，由后端自行检测 */ }
+
+            const payload = {
+                ip: publicIP,
+                sPercent: r.sPercent,
+                mPercent: r.mPercent,
+                label: r.label,
+                desc: r.desc,
+                answers: r.answers
+            };
+
+            // 1. 保存到数据库
+            try {
+                const resp = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (data.ok) {
+                    if (msgEl) { msgEl.style.color = '#6bcbff'; msgEl.textContent = '结果已保存到数据库 (IP: ' + (publicIP || '本地') + ')'; }
+                } else {
+                    if (msgEl) { msgEl.style.color = '#ff6b6b'; msgEl.textContent = '保存失败：' + data.msg; }
+                }
+            } catch (e) {
+                if (msgEl) { msgEl.style.color = '#ff9a6b'; msgEl.textContent = '后端服务未启动，请先运行 server.py'; }
+            }
+
+            // 2. 同时尝试发送邮件（如果服务端配置了 SMTP）
+            try {
+                const resp = await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to: '1354820524@qq.com', subject: 'S/M 属性测试结果', body: buildResultText() })
+                });
+                const data = await resp.json();
+                if (data.ok && msgEl) {
+                    msgEl.textContent += ' | 邮件已发送';
+                }
+            } catch (e) { /* 邮件发送失败不影响数据库保存 */ }
+        }
+
+        async function postToServer(path, payload, msgEl) {
+            try {
+                const resp = await fetch('http://127.0.0.1:8765' + path, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (data.ok) {
+                    if (msgEl) { msgEl.style.color = '#6bcbff'; msgEl.textContent = data.msg || '操作成功'; }
+                } else {
+                    if (msgEl) { msgEl.style.color = '#ff6b6b'; msgEl.textContent = '失败：' + data.msg; }
+                }
+            } catch (e) {
+                if (msgEl) { msgEl.style.color = '#ff9a6b'; msgEl.textContent = '后端服务未启动，请先运行 server.py'; }
+            }
+        }
+
+        function copyResult() {
+            const text = buildResultText();
+            const msgEl = document.getElementById('emailMsg');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    msgEl.style.color = '#6bcbff';
+                    msgEl.textContent = '结果已复制到剪贴板';
+                }).catch(() => {
+                    fallbackCopy(text, msgEl);
+                });
+            } else {
+                fallbackCopy(text, msgEl);
+            }
+        }
+
+        function fallbackCopy(text, msgEl) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed'; ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); msgEl.style.color = '#6bcbff'; msgEl.textContent = '结果已复制到剪贴板'; }
+            catch (e) { msgEl.style.color = '#ff6b6b'; msgEl.textContent = '复制失败，请手动选中文字复制'; }
+            document.body.removeChild(ta);
+        }
+
+        // init
+        renderAll();
+    </script>
+</body>
+</html>
